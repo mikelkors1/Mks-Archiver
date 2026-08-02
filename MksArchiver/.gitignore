@@ -1,0 +1,12 @@
+.idea/
+*.DotSettings.user
+
+.DS_Store
+
+bin/
+obj/
+*.user
+
+*.mp4
+*.mks
+*.tmp
