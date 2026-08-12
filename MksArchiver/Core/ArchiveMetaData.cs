@@ -16,7 +16,7 @@ public static class ArchiveMetaData
     public static (int magicNum, int version, long fileCnt) ReadMetaData(BinaryReader br)
     {
         int magicN = br.ReadInt32();
-        if (magicN != MagicNum) 
+        if (magicN != MagicNum)
             throw new InvalidDataException("Invalid magic number");
         int version =  br.ReadInt32();
         long fileCnt = br.ReadInt64();

@@ -7,7 +7,7 @@ using MksArchiver.Core;
 
 public static partial class ArchiverLogic
 {
-    public static void ListArchives(string fileName)
+    public static void ListArchives(string fileName, string[]? arguments = null)
     {
         FileInfo fileInfo = new FileInfo(fileName);
         if (!fileInfo.Exists) throw new ArchiverException($"file '{fileName}' not found");

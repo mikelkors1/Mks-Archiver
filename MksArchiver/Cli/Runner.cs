@@ -1,6 +1,7 @@
 using System;
 using System.CommandLine;
 using System.Collections.Generic;
+using System.IO.Enumeration;
 using MksArchiver.Core;
 
 namespace MksArchiver.Cli;
@@ -86,7 +87,53 @@ public static class Runner
         
         return rootCommand;
     }
+    
+    private static List<Option<bool>> opts = new List<Option<bool>>()
+    {
+        createOption,
+        listOption,
+        extractOption,
+        appendOption,
+        deleteOption,
+        infoOption
+    };
 
+    private delegate int ArchiverAction(string fileName, string[]? positionalArguments);
+    
+    private static Dictionary<Option<bool>, ArchiverAction> actionsTable = new Dictionary<Option<bool>, ArchiverAction>()
+    {
+        {createOption, (fileName, positionalArgumetns) =>
+        {
+            ArchiverLogic.CreateArchive(fileName, positionalArgumetns);
+            return (int)OperationResult.CreateSuccess;
+        }},
+        {listOption, (fileName, positionalArgumetns) =>
+        {
+            ArchiverLogic.ListArchives(fileName, positionalArgumetns);
+            return (int)OperationResult.ListSuccess;
+        }},
+        {extractOption, (fileName, positionalArgumetns) =>
+        {
+            ArchiverLogic.Extract(fileName, positionalArgumetns);
+            return (int)OperationResult.ExtractSuccess;
+        }},
+        {appendOption, (fileName, positionalArgumetns) =>
+        {
+            ArchiverLogic.AppendFiles(fileName, positionalArgumetns);
+            return (int)OperationResult.AppendSuccess;
+        }},
+        {deleteOption, (fileName, positionalArgumetns) =>
+        {
+            ArchiverLogic.DeleteArchives(fileName, positionalArgumetns);
+            return (int)OperationResult.DeleteSuccess;
+        }},
+        {infoOption, (fileName, positionalArgumetns) =>
+        {
+            ArchiverLogic.ReadMetaToTakeInfo(fileName, positionalArgumetns);
+            return (int)OperationResult.InfoSuccess;
+        }},
+    };
+    
     private static void SetActionToRootCommand(ref RootCommand rootCommand)
     {
         rootCommand.SetAction(parsedResult =>
@@ -107,40 +154,15 @@ public static class Runner
 
             try
             {
-                if (parsedResult.GetValue(createOption) is true)
+                foreach (var option in opts)
                 {
-                    ArchiverLogic.CreateArchive(filePath, positionalArgument);
-                    return (int)OperationResult.CreateSuccess;
+                    if (parsedResult.GetValue(option) is true)
+                    {
+                        return actionsTable[option](filePath, positionalArgument);
+                    }
                 }
-                else if (parsedResult.GetValue(listOption) is true)
-                {
-                    ArchiverLogic.ListArchives(filePath);
-                    return (int)OperationResult.ListSuccess;
-                }
-                else if (parsedResult.GetValue(extractOption) is true)
-                {
-                    ArchiverLogic.Extract(filePath, positionalArgument);
-                    return (int)OperationResult.ExtractSuccess;
-                }
-                else if (parsedResult.GetValue(appendOption) is true)
-                {
-                    ArchiverLogic.AppendFiles(filePath, positionalArgument);
-                    return (int)OperationResult.AppendSuccess;
-                }
-                else if (parsedResult.GetValue(deleteOption) is true)
-                {
-                    ArchiverLogic.DeleteArchives(filePath, positionalArgument);
-                    return (int)OperationResult.DeleteSuccess;
-                }
-                else if (parsedResult.GetValue(infoOption) is true)
-                {
-                    ArchiverLogic.ReadMetaToTakeInfo(filePath, positionalArgument);
-                    return (int)OperationResult.InfoSuccess;
-                }
-                else
-                {
-                    throw new BadArgumentException("No arguments provided");
-                }
+                
+                throw new BadArgumentException("No arguments provided");
             }
             catch (ArchiverException e)
             {
